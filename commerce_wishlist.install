@@ -75,6 +75,13 @@ function commerce_wishlist_update_7001(&$sandbox) {
 }
 
 /**
+ * Add a comment for quantity columnn in the database.
+ */
+function commerce_wishlist_update_7002(&$sandbox) {
+  db_change_field('commerce_wishlist', 'quantity', 'quantity', array('type' => 'numeric', 'description' => 'Quantity of the product in wishlist.'));
+}
+
+/**
  * Implements hook_uninstall().
  */
 function commerce_wishlist_uninstall() {
