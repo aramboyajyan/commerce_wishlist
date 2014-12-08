@@ -432,26 +432,22 @@ function commerce_wishlist_remove($user, $wishlist_id) {
 }
 
 /**
- * Verify if this prodcut has been added to wishlist
+ * Verify if a product has been added to the wishlist
  */
 function _commerce_wishlist_in_wishlist($uid, $product_id, $nid = NULL) {
-
-  $conditions = db_and();
-  $conditions->condition('uid', $uid);
-  $conditions->condition('product_id', $product_id);
-
-  if ($nid) {
-    $conditions->condition('nid', $nid);
-  }
-
-  $result = db_select('commerce_wishlist', 'cw')
+  $query = db_select('commerce_wishlist', 'cw')
     ->addTag('commerce_wishlist')
     ->fields('cw', array('wishlist_id'))
-    ->condition($conditions)
+    ->condition('uid', $uid)
+    ->condition('product_id', $product_id);
+  if ($nid) {
+    $query->condition('nid', $nid);
+  }
+  $is_in_wishlist = $query
     ->execute()
-    ->fetchAssoc();
+    ->fetchField();
 
-  return isset ($result['wishlist_id']);
+  return $is_in_wishlist;
 }
 
 /**
