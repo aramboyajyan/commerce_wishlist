@@ -1,5 +1,5 @@
 name = Commerce Wishlist
-description = Create a wishlist to Drupal Commerce
+description = Allows users to create public product wishlists.
 package = Commerce (contrib)
 dependencies[] = commerce
 dependencies[] = commerce_product
