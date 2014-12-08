@@ -208,7 +208,7 @@ function commerce_wishlist_add_form() {
   $form['add_to_wishlist'] = array(
     '#type' => 'submit',
     '#value' => t('Add to Wishlist'),
-    '#attributes' => array('class' => array('wishlist')),
+    '#attributes' => array('class' => array('commerce-wishlist')),
     '#validate' => array('commerce_wishlist_add_form_validate'),
     '#submit' => array('commerce_wishlist_add_form_submit'),
   );
