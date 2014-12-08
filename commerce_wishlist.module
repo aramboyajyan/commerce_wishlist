@@ -208,6 +208,7 @@ function commerce_wishlist_add_form() {
   $form['add_to_wishlist'] = array(
     '#type' => 'submit',
     '#value' => t('Add to Wishlist'),
+    '#name' => 'commerce-wishlist-add-product',
     '#attributes' => array('class' => array('commerce-wishlist')),
     '#validate' => array('commerce_wishlist_add_form_validate'),
     '#submit' => array('commerce_wishlist_add_form_submit'),
@@ -221,7 +222,7 @@ function commerce_wishlist_add_form() {
  */
 function commerce_wishlist_add_form_validate($form, &$form_state) {
   global $user;
-  if ($form_state['values']['op'] == t('Add to Wishlist')) {
+  if ($form_state['triggering_element']['#name'] == 'commerce-wishlist-add-product') {
     // Verify if is a registed user_access
     if (!$user->uid) {
       form_set_error('add_to_wishlist',
