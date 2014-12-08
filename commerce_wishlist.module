@@ -104,6 +104,33 @@ function commerce_wishlist_manage_access($account, $wishlist_id) {
 }
 
 /**
+ * Determine whether the user has a privilege to view a wishlist.
+ */
+function commerce_wishlist_user_wishlist_access($acting_user, $view) {
+  if (!is_object($acting_user)) {
+    global $user;
+    $acting_user = user_load($user->uid);
+  }
+  // Get the wishlist owner.
+  if (arg(1) && is_numeric(arg(1))) {
+    $wishlist_owner = user_load(arg(1));
+  }
+  if ($wishlist_owner) {
+    // Wishlist administrators.
+    if (user_access('administer wishlists')) return TRUE;
+    // If the user can view any active wishlist, stop here and grant access.
+    if (user_access('view active wishlists', $acting_user)) return TRUE;
+    // Check if the user can manage own wishlist AND if he is on the page of his
+    // own wishlist.
+    if (user_access('manage own wishlist', $acting_user)) {
+      return ($acting_user->uid == $wishlist_owner->uid);
+    }
+  }
+
+  return FALSE;
+}
+
+/**
  * Implements hook_form_alter().
  */
 function commerce_wishlist_form_alter(&$form, &$form_state, $form_id) {

@@ -121,3 +121,34 @@ function commerce_wishlist_views_data() {
   return $data;
 }
 
+/**
+ * Implements hook_views_plugins().
+ */
+function commerce_wishlist_views_plugins() {
+  $plugins = array();
+  $plugins['access'] = array(
+    'commerce_wishlist' => array(
+      'title'   => t('Wishlist access check'),
+      'help'    => t('Use this only for checking whether or not a user can access a wishlist.'),
+      'handler' => 'commerce_wishlist_views_access_plugin',
+      'path'    => drupal_get_path('module', 'commerce_wishlist') . '/includes/views',
+    ),
+  );
+
+  return $plugins;
+}
+
+/**
+ * Custom class for declaring a custom views access plugin.
+ */
+class commerce_wishlist_views_access_plugin extends views_plugin_access {
+  function summary_title() {
+    return t('This is summary title');
+  }
+  function access($account) {
+    return commerce_wishlist_user_wishlist_access($account, $this);
+  }
+  function get_access_callback() {
+    return array('commerce_wishlist_user_wishlist_access', array(1, $this));
+  }
+}
