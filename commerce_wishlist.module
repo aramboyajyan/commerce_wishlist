@@ -10,7 +10,6 @@
  */
 function commerce_wishlist_menu() {
   $items = array();
-
   $items['user/%user/wishlist/remove/%'] = array(
     'page callback' => 'commerce_wishlist_remove',
     'page arguments' => array(1, 4),
@@ -18,7 +17,6 @@ function commerce_wishlist_menu() {
     'access arguments' => array(1, 4),
     'type' => MENU_CALLBACK,
   );
-
   $items['admin/commerce/config/wishlist'] = array(
     'title' => 'Wishlist configuration',
     'description' => 'Configure wishlist',
@@ -26,8 +24,8 @@ function commerce_wishlist_menu() {
     'page arguments' => array('commerce_wishlist_admin_form'),
     'access arguments' => array('administer wishlists'),
     'file' => 'commerce_wishlist.admin.inc',
+    'type' => MENU_CALLBACK,
   );
-
   $items['wishlist-actions'] = array(
     'page callback' => 'commerce_wishlist_operations',
     'access arguments' => array('view own wishlist'),
@@ -35,31 +33,6 @@ function commerce_wishlist_menu() {
   );
 
   return $items;
-}
-
-/**
- * Implements hook_views_api().
- */
-function commerce_wishlist_views_api() {
-  return array(
-    'api' => 3,
-    'path' => drupal_get_path('module', 'commerce_wishlist') . '/includes/views',
-  );
-}
-
-/**
- * Implements hook_views_pre_render().
- */
-function commerce_wishlist_views_pre_render(&$view) {
-  if ($view->name == 'wishlist' && $view->current_display == 'commerce_wishlist_user') {
-    // Sanity check, in case something has been changed in the original view.
-    if (isset($view->args[0])) {
-      // Load full user account of wishlist owner.
-      $account = user_load($view->args[0]);
-      // Update view title.
-      $view->build_info['title'] = theme('commerce_wishlist_user_wishlist_page_title', array('account' => $account));
-    }
-  }
 }
 
 /**
@@ -83,118 +56,18 @@ function commerce_wishlist_permission() {
 }
 
 /**
- * Implements hook_entity_delete().
+ * Implements hook_theme().
  */
-function commerce_wishlist_entity_delete($entity, $type) {
-  switch ($type) {
-    case 'user':
-      // Remove all wishlist products for this user.
-      db_delete('commerce_wishlist')
-        ->condition('uid', $entity->uid)
-        ->execute();
-      break;
-
-    case 'node':
-      // Remove all wishlist products that were tied to this node.
-      db_delete('commerce_wishlist')
-        ->condition('nid', $entity->nid)
-        ->execute();
-      break;
-
-    case 'commerce_product':
-      // Remove all wishlist entries that were referenced by this product.
-      db_delete('commerce_wishlist')
-        ->condition('product_id', $entity->product_id)
-        ->execute();
-      break;
-  }
-}
-
-/**
- * Implements hook_commerce_checkout_complete().
- */
-function commerce_wishlist_commerce_checkout_complete($order) {
-  // Loop through all line items.
-  foreach ($order->commerce_line_items[LANGUAGE_NONE] as $order_line_item) {
-    $line_item = commerce_line_item_load($order_line_item['line_item_id']);
-    // In order to avoid locking this to only line items of type "product", we
-    // will check only if the line item has wishlist user IDs defined in the
-    // data storage.
-    if (isset($line_item->data['wishlist_products']) && count($line_item->data['wishlist_products'])) {
-      // Loop through the users whose wishlist products are linked to this line
-      // item and remove them from the database.
-      foreach ($line_item->data['wishlist_products'] as $wishlist_product) {
-        // Invoke appropriate event.
-        $account = user_load($wishlist_product['user_id']);
-        $product = commerce_product_load($wishlist_product['product_id']);
-        $node    = node_load($wishlist_product['node_id']);
-        rules_invoke_event('commerce_wishlist_event_product_purchased', $account, $product, $node);
-      }
-    }
-  }
-}
-
-/**
- * Implements hook_commerce_cart_product_add().
- */
-function commerce_wishlist_commerce_cart_product_add($order, $product, $quantity, $line_item) {
-  // When add product to cart delete product from wishlist if the configuration
-  // is set to do so.
-  if (variable_get('commerce_wishlist_remove_product', 1)) {
-    db_delete('commerce_wishlist')
-      ->condition(db_and()
-          ->condition('uid', $order->uid)
-          ->condition('product_id', $product->product_id)
-      )
-      ->execute();
-  }
-}
-
-/**
- * Determine whether the user has a privilege to manage a wishlist.
- */
-function commerce_wishlist_manage_access($account, $wishlist_id) {
-  // Allow administrators to edit any wishlist on the site.
-  if (user_access('administer wishlists')) return TRUE;
-
-  // Check if the wishlist owner and the user who is trying to edit the wishlist
-  // are the same, and if they have permission to manage own wishlist.
-  global $user;
-  $wishlist_uid = db_select('commerce_wishlist', 'cw')
-    ->addTag('commerce_wishlist')
-    ->fields('cw', array('uid'))
-    ->condition('wishlist_id', $wishlist_id)
-    ->execute()
-    ->fetchField();
-
-  return ($wishlist_uid == $user->uid && user_access('manage own wishlist'));
-}
-
-/**
- * Determine whether the user has a privilege to view a wishlist.
- */
-function commerce_wishlist_user_wishlist_access($acting_user, $view) {
-  if (!is_object($acting_user)) {
-    global $user;
-    $acting_user = user_load($user->uid);
-  }
-  // Get the wishlist owner.
-  if (arg(1) && is_numeric(arg(1))) {
-    $wishlist_owner = user_load(arg(1));
-  }
-  if ($wishlist_owner) {
-    // Wishlist administrators.
-    if (user_access('administer wishlists')) return TRUE;
-    // If the user can view any active wishlist, stop here and grant access.
-    if (user_access('view active wishlists', $acting_user)) return TRUE;
-    // Check if the user can manage own wishlist AND if he is on the page of his
-    // own wishlist.
-    if (user_access('manage own wishlist', $acting_user)) {
-      return ($acting_user->uid == $wishlist_owner->uid);
-    }
-  }
-
-  return FALSE;
+function commerce_wishlist_theme($existing, $type, $theme, $path) {
+  // Themable elements.
+  return array(
+    'commerce_wishlist_already_in_wishlist_link' => array(
+      'variables' => array('user_id' => NULL),
+    ),
+    'commerce_wishlist_user_wishlist_page_title' => array(
+      'variables' => array('account' => NULL),
+    ),
+  );
 }
 
 /**
@@ -304,6 +177,34 @@ function commerce_wishlist_form_alter(&$form, &$form_state, $form_id) {
 }
 
 /**
+ * Implements hook_entity_delete().
+ */
+function commerce_wishlist_entity_delete($entity, $type) {
+  switch ($type) {
+    case 'user':
+      // Remove all wishlist products for this user.
+      db_delete('commerce_wishlist')
+        ->condition('uid', $entity->uid)
+        ->execute();
+      break;
+
+    case 'node':
+      // Remove all wishlist products that were tied to this node.
+      db_delete('commerce_wishlist')
+        ->condition('nid', $entity->nid)
+        ->execute();
+      break;
+
+    case 'commerce_product':
+      // Remove all wishlist entries that were referenced by this product.
+      db_delete('commerce_wishlist')
+        ->condition('product_id', $entity->product_id)
+        ->execute();
+      break;
+  }
+}
+
+/**
  * Implements hook_commerce_checkout_complete().
  */
 function commerce_wishlist_commerce_checkout_complete($order) {
@@ -328,18 +229,44 @@ function commerce_wishlist_commerce_checkout_complete($order) {
 }
 
 /**
- * Implements hook_theme().
+ * Implements hook_commerce_cart_product_add().
  */
-function commerce_wishlist_theme($existing, $type, $theme, $path) {
-  // Themable elements.
+function commerce_wishlist_commerce_cart_product_add($order, $product, $quantity, $line_item) {
+  // When add product to cart delete product from wishlist if the configuration
+  // is set to do so.
+  if (variable_get('commerce_wishlist_remove_product', 1)) {
+    db_delete('commerce_wishlist')
+      ->condition(db_and()
+          ->condition('uid', $order->uid)
+          ->condition('product_id', $product->product_id)
+      )
+      ->execute();
+  }
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function commerce_wishlist_views_api() {
   return array(
-    'commerce_wishlist_already_in_wishlist_link' => array(
-      'variables' => array('user_id' => NULL),
-    ),
-    'commerce_wishlist_user_wishlist_page_title' => array(
-      'variables' => array('account' => NULL),
-    ),
+    'api' => 3,
+    'path' => drupal_get_path('module', 'commerce_wishlist') . '/includes/views',
   );
+}
+
+/**
+ * Implements hook_views_pre_render().
+ */
+function commerce_wishlist_views_pre_render(&$view) {
+  if ($view->name == 'wishlist' && $view->current_display == 'commerce_wishlist_user') {
+    // Sanity check, in case something has been changed in the original view.
+    if (isset($view->args[0])) {
+      // Load full user account of wishlist owner.
+      $account = user_load($view->args[0]);
+      // Update view title.
+      $view->build_info['title'] = theme('commerce_wishlist_user_wishlist_page_title', array('account' => $account));
+    }
+  }
 }
 
 /**
@@ -366,6 +293,53 @@ function theme_commerce_wishlist_user_wishlist_page_title(&$variables) {
     return t('My wishlist');
   }
   return t("@name's wishlist", array('@name' => $variables['account']->name));
+}
+
+/**
+ * Determine whether the user has a privilege to manage a wishlist.
+ */
+function commerce_wishlist_manage_access($account, $wishlist_id) {
+  // Allow administrators to edit any wishlist on the site.
+  if (user_access('administer wishlists')) return TRUE;
+
+  // Check if the wishlist owner and the user who is trying to edit the wishlist
+  // are the same, and if they have permission to manage own wishlist.
+  global $user;
+  $wishlist_uid = db_select('commerce_wishlist', 'cw')
+    ->addTag('commerce_wishlist')
+    ->fields('cw', array('uid'))
+    ->condition('wishlist_id', $wishlist_id)
+    ->execute()
+    ->fetchField();
+
+  return ($wishlist_uid == $user->uid && user_access('manage own wishlist'));
+}
+
+/**
+ * Determine whether the user has a privilege to view a wishlist.
+ */
+function commerce_wishlist_user_wishlist_access($acting_user, $view) {
+  if (!is_object($acting_user)) {
+    global $user;
+    $acting_user = user_load($user->uid);
+  }
+  // Get the wishlist owner.
+  if (arg(1) && is_numeric(arg(1))) {
+    $wishlist_owner = user_load(arg(1));
+  }
+  if ($wishlist_owner) {
+    // Wishlist administrators.
+    if (user_access('administer wishlists')) return TRUE;
+    // If the user can view any active wishlist, stop here and grant access.
+    if (user_access('view active wishlists', $acting_user)) return TRUE;
+    // Check if the user can manage own wishlist AND if he is on the page of his
+    // own wishlist.
+    if (user_access('manage own wishlist', $acting_user)) {
+      return ($acting_user->uid == $wishlist_owner->uid);
+    }
+  }
+
+  return FALSE;
 }
 
 /**
@@ -414,7 +388,6 @@ function commerce_wishlist_user_login($form, &$form_state) {
     );
   }
 }
-
 
 /**
  * Form callback for add a new button of commerce_cart_add_to_cart_form()
