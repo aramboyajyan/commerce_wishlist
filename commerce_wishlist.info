@@ -5,6 +5,7 @@ dependencies[] = commerce
 dependencies[] = commerce_product
 dependencies[] = views
 core = 7.x
+configure = admin/commerce/config/wishlist
 
 ; Views handlers files
 files[] = includes/views/handlers/commerce_wishlist_handler_field_product_link_delete.inc
