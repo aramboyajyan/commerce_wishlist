@@ -491,10 +491,17 @@ function commerce_wishlist_operations() {
 }
 
 /**
- * Adds product to wishlist
+ * Adds a product to the wishlist.
  */
 function _commerce_wishlist_add_product($fields) {
-  return db_insert('commerce_wishlist')
+  // Load necessary entities and invoke the rule.
+  $product = commerce_product_load($fields['product_id']);
+  $account = user_load($fields['uid']);
+  $node    = node_load($fields['nid']);
+  rules_invoke_event('commerce_wishlist_event_product_added_to_wishlist', $account, $product, $node);
+
+  // Insert a new row in our table.
+  db_insert('commerce_wishlist')
     ->fields($fields)
     ->execute();
 }
