@@ -68,6 +68,30 @@ function commerce_wishlist_permission() {
 }
 
 /**
+ * Implements hook_commerce_checkout_complete().
+ */
+function commerce_wishlist_commerce_checkout_complete($order) {
+  // Loop through all line items.
+  foreach ($order->commerce_line_items[LANGUAGE_NONE] as $order_line_item) {
+    $line_item = commerce_line_item_load($order_line_item['line_item_id']);
+    // In order to avoid locking this to only line items of type "product", we
+    // will check only if the line item has wishlist user IDs defined in the
+    // data storage.
+    if (isset($line_item->data['wishlist_products']) && count($line_item->data['wishlist_products'])) {
+      // Loop through the users whose wishlist products are linked to this line
+      // item and remove them from the database.
+      foreach ($line_item->data['wishlist_products'] as $wishlist_product) {
+        // Invoke appropriate event.
+        $account = user_load($wishlist_product['user_id']);
+        $product = commerce_product_load($wishlist_product['product_id']);
+        $node    = node_load($wishlist_product['node_id']);
+        rules_invoke_event('commerce_wishlist_event_product_purchased', $account, $product, $node);
+      }
+    }
+  }
+}
+
+/**
  * Implements hook_commerce_cart_product_add().
  */
 function commerce_wishlist_commerce_cart_product_add($order, $product, $quantity, $line_item) {
