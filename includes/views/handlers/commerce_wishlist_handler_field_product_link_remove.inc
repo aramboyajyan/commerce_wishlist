@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Field handler to present a link to delete a product for wishlist.
+ * Field handler to present a link to remove a product for wishlist.
  */
 class commerce_wishlist_handler_field_product_link_remove extends views_handler_field {
   function construct() {
@@ -34,12 +34,17 @@ class commerce_wishlist_handler_field_product_link_remove extends views_handler_
   }
 
   function render($values) {
-    // Ensure the user has access to delete this product.
-    $wishlist_id = $this->get_value($values, 'wishlist_id');
-    $uid = $this->get_value($values, 'uid');
+    // Ensure the user has access to remove this product from wishlist.
+    global $user;
+    $account = user_load($user->uid);
+    $wishlist_id    = $this->get_value($values, 'wishlist_id');
+    $wishlist_owner = $this->get_value($values, 'uid');
+    if (commerce_wishlist_manage_access($account, $wishlist_id)) {
+      $text = !empty($this->options['text']) ? $this->options['text'] : t('Remove');
+      
+      return l($text, 'user/' . $wishlist_owner . '/wishlist/remove/' . $wishlist_id);
+    }
 
-    $text = !empty($this->options['text']) ? $this->options['text'] : t('remove');
-
-    return l($text, 'user/'. $uid .'/wishlist/remove/'. $wishlist_id, array('query' => drupal_get_destination()));
+    return '';
   }
 }
