@@ -87,7 +87,7 @@ function commerce_wishlist_access($user, $wishlist_id = '') {
 
   if (isset($wishlist_id)) {
     $result = db_select('commerce_wishlist', 'cw')
-      ->addTag('wishlist')
+      ->addTag('commerce_wishlist')
       ->fields('cw', array('uid'))
       ->condition('wishlist_id', $wishlist_id)
       ->execute()
@@ -291,7 +291,7 @@ function commerce_wishlist_in_wishlist($uid, $product_id, $nid = NULL) {
   }
 
   $result = db_select('commerce_wishlist', 'cw')
-    ->addTag('wishlist')
+    ->addTag('commerce_wishlist')
     ->fields('cw', array('wishlist_id'))
     ->condition($conditions)
     ->execute()
