@@ -113,7 +113,7 @@ function commerce_wishlist_form_alter(&$form, &$form_state, $form_id) {
     // Check if is a product
     $product_type  = $form_state['default_product']->type;
     $product_types = array_filter(variable_get('commerce_wishlist_product_types', array()));
-    $access = ($product_types && empty($product_types[$product_type])) {
+    $access = ($product_types && empty($product_types[$product_type]));
 
     // Prepare all variables for "Add to wishlist" button.
     $nid         = _commerce_wishlist_get_context_entity_id($form_state['context']);
