@@ -162,7 +162,7 @@ function commerce_wishlist_update_7004(&$sandbox) {
  * Implements hook_uninstall().
  */
 function commerce_wishlist_uninstall() {
-  // Removes the configuration
+  // Remove module variables.
   variable_del('commerce_wishlist_element');
   variable_del('commerce_wishlist_product_types');
   variable_del('commerce_wishlist_weight');

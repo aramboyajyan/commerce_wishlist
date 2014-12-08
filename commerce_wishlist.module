@@ -400,7 +400,7 @@ function commerce_wishlist_add_form() {
 function commerce_wishlist_add_form_validate($form, &$form_state) {
   global $user;
   if ($form_state['triggering_element']['#name'] == 'commerce-wishlist-add-product') {
-    // Verify if is a registed user_access
+    // Verify if the user is logged in.
     if (!$user->uid) {
       form_set_error('add_to_wishlist',
         t('Please <a href="@login">log in</a> or <a href="@register">register</a> to add this product to your wishlist.',
@@ -408,9 +408,9 @@ function commerce_wishlist_add_form_validate($form, &$form_state) {
         )
       );
     }
-    // Get nid from context information
+    // Get nid from context information.
     $nid = _commerce_wishlist_get_context_entity_id($form_state['build_info']['args'][2]);
-    // Verify if this prodcut has been added to wishlist
+    // Verify if this product has been added to wishlist.
     $in_wishlist = _commerce_wishlist_in_wishlist($user->uid, $form_state['values']['product_id'], $nid);
     if ($in_wishlist) {
       form_set_error('add_to_wishlist', t('This product is already in your wishlist.'));

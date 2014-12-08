@@ -10,17 +10,20 @@
 function commerce_wishlist_views_data() {
   $data = array();
 
-  $data['commerce_wishlist']['table']['group']  = t('Commerce Wishlist');
+  $data['commerce_wishlist']['table']['group'] = t('Commerce Wishlist');
 
   $data['commerce_wishlist']['table']['base'] = array(
     'field' => 'wishlist_id',
     'title' => t('Commerce Wishlist'),
-    'help' => t('TODO:'),
+    'help' => t('Table used for storing wishlist products.'),
     'entity type' => 'commerce_product',
     'access query tag' => 'commerce_product_access',
+    'defaults' => array(
+      'field' => 'product_id',
+    ),
   );
 
-  // Expose the product ID.
+  // Expose the commerce product ID.
   $data['commerce_wishlist']['product_id'] = array(
     'title' => t('Product ID'),
     'help' => t('The unique internal identifier of the product.'),
@@ -45,10 +48,10 @@ function commerce_wishlist_views_data() {
     ),
   );
 
-  // Expose the product type.
+  // Expose the product node ID.
   $data['commerce_wishlist']['nid'] = array(
-    'title' => t('Nid'),
-    'help' => t('The human-readable name of the type of the product.'),
+    'title' => t('Node ID'),
+    'help' => t('Unique identifier for the node which references the wishlist product.'),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),
@@ -110,11 +113,11 @@ function commerce_wishlist_views_data() {
   );
 
   // Expose links to operate on the product.
-  $data['commerce_wishlist']['delete_wishlist'] = array(
+  $data['commerce_wishlist']['remove_wishlist'] = array(
     'field' => array(
-      'title' => t('Delete'),
-      'help' => t('Provide a simple link to delete the product from the wishlist.'),
-      'handler' => 'commerce_wishlist_handler_field_product_link_delete',
+      'title' => t('Remove'),
+      'help' => t('Provide a simple link to remove a product from the wishlist.'),
+      'handler' => 'commerce_wishlist_handler_field_product_link_remove',
     ),
   );
 
