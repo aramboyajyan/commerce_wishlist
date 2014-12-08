@@ -14,7 +14,7 @@ function commerce_wishlist_menu() {
   $items['user/%user/wishlist/delete/%'] = array(
     'page callback' => 'commerce_wishlist_delete',
     'page arguments' => array(1, 4),
-    'access callback' => 'commerce_wishlist_access',
+    'access callback' => 'commerce_wishlist_manage_access',
     'access arguments' => array(1, 4),
     'type' => MENU_CALLBACK,
   );
@@ -84,23 +84,23 @@ function commerce_wishlist_commerce_cart_product_add($order, $product, $quantity
 }
 
 /**
- * Determine whether the user has a given privilege to wishlist.
+ * Determine whether the user has a privilege to manage a wishlist.
  */
-function commerce_wishlist_access($user, $wishlist_id = '') {
+function commerce_wishlist_manage_access($account, $wishlist_id) {
+  // Allow administrators to edit any wishlist on the site.
   if (user_access('administer wishlists')) return TRUE;
 
-  if (isset($wishlist_id)) {
-    $result = db_select('commerce_wishlist', 'cw')
-      ->addTag('commerce_wishlist')
-      ->fields('cw', array('uid'))
-      ->condition('wishlist_id', $wishlist_id)
-      ->execute()
-      ->fetchAssoc();
-  }
+  // Check if the wishlist owner and the user who is trying to edit the wishlist
+  // are the same, and if they have permission to manage own wishlist.
+  global $user;
+  $wishlist_uid = db_select('commerce_wishlist', 'cw')
+    ->addTag('commerce_wishlist')
+    ->fields('cw', array('uid'))
+    ->condition('wishlist_id', $wishlist_id)
+    ->execute()
+    ->fetchField();
 
-  if ($result['uid'] == $user->uid && user_access('view own wishlist')) return TRUE;
-
-  return FALSE;
+  return ($wishlist_uid == $user->uid && user_access('manage own wishlist'));
 }
 
 /**
