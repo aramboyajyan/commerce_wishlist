@@ -404,19 +404,15 @@ function commerce_wishlist_add_form_validate($form, &$form_state) {
  */
 function commerce_wishlist_add_form_submit($form, &$form_state) {
   global $user;
-
-  if ($form_state['values']['op'] == t('Add to Wishlist')) {
-    $fields = array('uid' => $user->uid, 'product_id' => $form_state['values']['product_id'], 'quantity' => $form_state['values']['quantity']);
-    $fields['nid'] = _commerce_wishlist_get_context_entity_id($form_state['build_info']['args'][2]);
-
-    _commerce_wishlist_add_product($fields);
-
-    $title = (isset($form_state['build_info']['args'][2]['entity']->title)) ? $form_state['build_info']['args'][2]['entity']->title : $form_state['build_info']['args'][0]->line_item_label;
-
-    drupal_set_message(t('%title added to <a href="!url">your wishlist</a>.', array('%title' => $title, '!url' => url('user/'. $user->uid .'/wishlist'))));
-  } else {
-    commerce_cart_add_to_cart_form_submit($form, $form_state);
-  }
+  $node_id = _commerce_wishlist_get_context_entity_id($form_state['build_info']['args'][2]);
+  // Add this product to user's wishlist.
+  _commerce_wishlist_add_product(array(
+    'nid'        => $node_id,
+    'uid'        => $user->uid,
+    'product_id' => $form_state['values']['product_id'],
+    'quantity'   => $form_state['values']['quantity'],
+    'added'      => REQUEST_TIME,
+  ));
 }
 
 /**
