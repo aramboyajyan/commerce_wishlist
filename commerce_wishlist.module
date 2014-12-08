@@ -420,15 +420,28 @@ function commerce_wishlist_add_form_submit($form, &$form_state) {
 }
 
 /**
- * Access callback: Delete the wishlist product
+ * Remove a wishlist product.
  */
-function commerce_wishlist_remove($user, $wishlist_id) {
+function commerce_wishlist_remove($account, $wishlist_id) {
+  // Invoke the appropriate rules event.
+  $wishlist_details = db_select('commerce_wishlist', 'cw')
+    ->addTag('commerce_wishlist')
+    ->fields('cw')
+    ->condition('wishlist_id', $wishlist_id)
+    ->execute()
+    ->fetchObject();
+  $product = commerce_product_load($wishlist_details->product_id);
+  $node    = node_load($wishlist_details->nid);
+  rules_invoke_event('commerce_wishlist_event_product_removed', $account, $product, $node);
+  // Remove the wishlist from the database.
   db_delete('commerce_wishlist')
     ->condition('wishlist_id', $wishlist_id)
     ->execute();
 
-  drupal_set_message(t('The product has been deleted from your wishlist.'));
-  drupal_goto('user/'. $user->uid .'/wishlist');
+  // This seems to be necessary so that Drupal can continue execution as usual.
+  // If this part is left out, the rule will be called but there will be no
+  // redirect or any output. Only white blank page will be displayed.
+  return '';
 }
 
 /**
