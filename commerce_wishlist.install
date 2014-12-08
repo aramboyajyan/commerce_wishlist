@@ -104,6 +104,61 @@ function commerce_wishlist_update_7003(&$sandbox) {
 }
 
 /**
+ * Transfer permissions for managing the wishlists.
+ */
+function commerce_wishlist_update_7004(&$sandbox) {
+  // Get all the roles which are granted permissions to view own wishlist and
+  // re-save them to match the new permissions for managing the wishlist.
+  $query = db_select('role_permission', 'rp')
+    ->condition('rp.permission', 'view own wishlist');
+  $query->leftJoin('role', 'r', 'rp.rid = r.rid');
+  $query
+    ->fields('rp')
+    ->fields('r', array('name'));
+  $permissions = $query
+    ->execute()
+    ->fetchAll();
+  // Create a new array in which we will save the roles that have been affected
+  // by the new permissions. This will be displayed to the administrators after
+  // the update process has been completed.
+  $affected_roles = array();
+  foreach ($permissions as $permission) {
+    // Sanity check: just in case the permission has already been granted to
+    // this role, e.g. if the update.php has not been run previously and the
+    // administrator already saved the permissions.
+    $already_exists = db_select('role_permission', 'rp')
+      ->fields('rp', array('rid'))
+      ->condition('module', 'commerce_wishlist')
+      ->condition('permission', 'manage own wishlist')
+      ->condition('rid', $permission->rid)
+      ->execute()
+      ->fetchField();
+    if (!$already_exists) {
+      // Assign this role a new permission.
+      db_insert('role_permission')
+        ->fields(array(
+          'rid'        => $permission->rid,
+          'permission' => 'manage own wishlist',
+          'module'     => 'commerce_wishlist',
+        ))
+        ->execute();
+      // Add this role to the list of affected roles.
+      $affected_roles[] = $permission->name;
+    }
+  }
+  // Remove the old permissions as they are not necessary anymore.
+  db_delete('role_permission')
+    ->condition('permission', 'view own wishlist')
+    ->execute();
+  // Show a notification message to administrators so they know that users can
+  // now see wishlists of other members.
+  drupal_set_message(t('This release of Commerce Wishlistis supports public wishlists. By default all wishlists are made private and are visible only to their owners and administrators. If you want to make wishlists public, grant the "View active wishlists" permission to the appropriate role on the <a href="@link">permissions page</a>.', array('@link' => url('admin/people/permissions'))));
+  drupal_set_message(t('If you have used the "View own wishlist" permission in a custom view or another place on the website, you will need to update it manually and use "Manage own wishlist" instead.'), 'warning');
+
+  return t('Old permission "View own wishlist" has been replaced by the "Manage own wishlist" successfully. The following roles were affected: %roles.', array('%roles' => implode(', ', $affected_roles)));
+}
+
+/**
  * Implements hook_uninstall().
  */
 function commerce_wishlist_uninstall() {
