@@ -400,6 +400,30 @@ function _commerce_wishlist_add_product($fields) {
 }
 
 /**
+ * Helper function for removing the wishlist product for a particular user.
+ */
+function _commerce_wishlist_remove_product_for_user($product_id, $user_id) {
+  // Get the node ID first. This will be used as an argument for rules.
+  $nid = db_select('commerce_wishlist', 'cw')
+    ->addTag('commerce_wishlist')
+    ->fields('cw', array('nid'))
+    ->condition('product_id', $product_id)
+    ->condition('uid', $user_id)
+    ->execute()
+    ->fetchField();
+  // Remove the entry from the database.
+  db_delete('commerce_wishlist')
+    ->condition('uid', $user_id)
+    ->condition('product_id', $product_id)
+    ->execute();
+  // Invoke the appropriate rule.
+  $account = user_load($user_id);
+  $product = commerce_product_load($product_id);
+  $node    = node_load($nid);
+  rules_invoke_event('commerce_wishlist_event_product_removed', $account, $product, $node);
+}
+
+/**
  * Helper function for getting entity ID. There has been an API change in
  * Drupal Commerce 7.x-1.6 release. See https://drupal.org/node/1863776
  * @param $context
