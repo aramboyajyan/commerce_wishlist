@@ -3,7 +3,7 @@
 /**
  * Field handler to present a link to delete a product for wishlist.
  */
-class commerce_wishlist_handler_field_product_link_delete extends views_handler_field {
+class commerce_wishlist_handler_field_product_link_remove extends views_handler_field {
   function construct() {
     parent::construct();
     $this->additional_fields['uid'] = 'uid';
@@ -38,8 +38,8 @@ class commerce_wishlist_handler_field_product_link_delete extends views_handler_
     $wishlist_id = $this->get_value($values, 'wishlist_id');
     $uid = $this->get_value($values, 'uid');
 
-    $text = !empty($this->options['text']) ? $this->options['text'] : t('delete');
+    $text = !empty($this->options['text']) ? $this->options['text'] : t('remove');
 
-    return l($text, 'user/'. $uid .'/wishlist/delete/'. $wishlist_id, array('query' => drupal_get_destination()));
+    return l($text, 'user/'. $uid .'/wishlist/remove/'. $wishlist_id, array('query' => drupal_get_destination()));
   }
 }

@@ -11,8 +11,8 @@
 function commerce_wishlist_menu() {
   $items = array();
 
-  $items['user/%user/wishlist/delete/%'] = array(
-    'page callback' => 'commerce_wishlist_delete',
+  $items['user/%user/wishlist/remove/%'] = array(
+    'page callback' => 'commerce_wishlist_remove',
     'page arguments' => array(1, 4),
     'access callback' => 'commerce_wishlist_manage_access',
     'access arguments' => array(1, 4),
@@ -422,7 +422,7 @@ function commerce_wishlist_add_form_submit($form, &$form_state) {
 /**
  * Access callback: Delete the wishlist product
  */
-function commerce_wishlist_delete($user, $wishlist_id) {
+function commerce_wishlist_remove($user, $wishlist_id) {
   db_delete('commerce_wishlist')
     ->condition('wishlist_id', $wishlist_id)
     ->execute();
