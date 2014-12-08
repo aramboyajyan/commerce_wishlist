@@ -83,6 +83,34 @@ function commerce_wishlist_permission() {
 }
 
 /**
+ * Implements hook_entity_delete().
+ */
+function commerce_wishlist_entity_delete($entity, $type) {
+  switch ($type) {
+    case 'user':
+      // Remove all wishlist products for this user.
+      db_delete('commerce_wishlist')
+        ->condition('uid', $entity->uid)
+        ->execute();
+      break;
+
+    case 'node':
+      // Remove all wishlist products that were tied to this node.
+      db_delete('commerce_wishlist')
+        ->condition('nid', $entity->nid)
+        ->execute();
+      break;
+
+    case 'commerce_product':
+      // Remove all wishlist entries that were referenced by this product.
+      db_delete('commerce_wishlist')
+        ->condition('product_id', $entity->product_id)
+        ->execute();
+      break;
+  }
+}
+
+/**
  * Implements hook_commerce_checkout_complete().
  */
 function commerce_wishlist_commerce_checkout_complete($order) {
