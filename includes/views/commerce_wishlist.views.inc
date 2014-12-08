@@ -93,6 +93,22 @@ function commerce_wishlist_views_data() {
     ),
   );
 
+  // Expose the timestamp for when the product has been added to wishlist.
+  $data['commerce_wishlist']['added'] = array(
+    'title' => t('Added on'),
+    'help' => t('Timestamp for when the product has been added to wishlist.'),
+    'field' => array(
+      'handler' => 'views_handler_field_date',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort_date',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_date',
+    ),
+  );
+
   // Expose links to operate on the product.
   $data['commerce_wishlist']['delete_wishlist'] = array(
     'field' => array(

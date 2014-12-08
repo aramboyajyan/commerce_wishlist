@@ -82,6 +82,28 @@ function commerce_wishlist_update_7002(&$sandbox) {
 }
 
 /**
+ * Add a column for saving the timestamp of when the product has been added to
+ * the wishlist.
+ */
+function commerce_wishlist_update_7003(&$sandbox) {
+  // Add a new column.
+  db_add_field('commerce_wishlist', 'added', array(
+    'type' => 'int',
+    'size' => 'normal',
+    'not null' => TRUE,
+    'default' => 0,
+    'description' => 'Timestamp for when the product was added to the wishlist.',
+  ));
+  // For all existing records add current timestamp, to avoid errors / issues.
+  db_update('commerce_wishlist')
+    ->fields(array('added' => REQUEST_TIME))
+    ->execute();
+
+  // Show message for administrators.
+  return t('Timestamp column added successfully to the {commerce_wishlist} table.<br>Current timestamp has been assigned to all products.');
+}
+
+/**
  * Implements hook_uninstall().
  */
 function commerce_wishlist_uninstall() {
