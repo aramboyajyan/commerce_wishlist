@@ -52,9 +52,13 @@ function commerce_wishlist_views_api() {
  */
 function commerce_wishlist_permission() {
   return array(
-    'view own wishlist' => array(
-      'title' => t('View own wishlist'),
-      'description' => t('Allows a user to see their own wishlist.'),
+    'view active wishlists' => array(
+      'title' => t('View active wishlists'),
+      'description' => t('Allows a user to see wishlists of other active users.'),
+    ),
+    'manage own wishlist' => array(
+      'title' => t('Manage own wishlist'),
+      'description' => t('Allows a user to see and manage their own wishlist.'),
     ),
     'administer wishlists' => array(
       'title' => t('Administer wishlist'),
