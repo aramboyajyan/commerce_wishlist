@@ -461,8 +461,7 @@ function commerce_wishlist_operations() {
 
   $args = func_get_args();
 
-  if ((isset($args[0]) && isset($args[1]) &&
-      isset($args[2]) && isset($args[3])) && (isset($_GET['token']) && drupal_valid_token($_GET['token']))) {
+  if (count($args) >= 4 && isset($_GET['token']) && drupal_valid_token($_GET['token'])) {
     switch ($args[1]) {
       case 'add' :
         if (_commerce_wishlist_in_wishlist($args[2], $args[3], $args[4])) {
