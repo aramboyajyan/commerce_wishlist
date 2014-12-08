@@ -209,7 +209,7 @@ function commerce_wishlist_form_alter(&$form, &$form_state, $form_id) {
     $nid = _commerce_wishlist_get_context_entity_id($form_state['context']);
     $element = variable_get('commerce_wishlist_element', 'button');
     $in_wishlist = _commerce_wishlist_in_wishlist($user->uid, $product_id);
-    $link_exists = _commerce_wishlist_link($user->uid);
+    $link_exists = theme('commerce_wishlist_already_in_wishlist_link', array('user_id' => $user->uid));
 
     switch ($element) {
       case 'button':
