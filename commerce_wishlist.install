@@ -64,7 +64,7 @@ function commerce_wishlist_schema() {
 }
 
 /**
- * 
+ * Change NID column and add a new column for quantity.
  */
 function commerce_wishlist_update_7001(&$sandbox) {
   // Change NID Collumn
