@@ -48,6 +48,21 @@ function commerce_wishlist_views_api() {
 }
 
 /**
+ * Implements hook_views_pre_render().
+ */
+function commerce_wishlist_views_pre_render(&$view) {
+  if ($view->name == 'wishlist' && $view->current_display == 'commerce_wishlist_user') {
+    // Sanity check, in case something has been changed in the original view.
+    if (isset($view->args[0])) {
+      // Load full user account of wishlist owner.
+      $account = user_load($view->args[0]);
+      // Update view title.
+      $view->build_info['title'] = theme('commerce_wishlist_user_wishlist_page_title', array('account' => $account));
+    }
+  }
+}
+
+/**
  * Implements hook_permission().
  */
 function commerce_wishlist_permission() {
@@ -293,6 +308,9 @@ function commerce_wishlist_theme($existing, $type, $theme, $path) {
     'commerce_wishlist_already_in_wishlist_link' => array(
       'variables' => array('user_id' => NULL),
     ),
+    'commerce_wishlist_user_wishlist_page_title' => array(
+      'variables' => array('account' => NULL),
+    ),
   );
 }
 
@@ -304,6 +322,22 @@ function theme_commerce_wishlist_already_in_wishlist_link(&$variables) {
   return t('Already in <a class="in-wishlist" href="@url">your wishlist</a>.', array(
     '@url' => url('user/' . $variables['user_id'] . '/wishlist'))
   );
+}
+
+/**
+ * Theme callback for page title on user's wishlist page.
+ * 
+ * The reason this is created as a separate themeable function is that depending
+ * on the site configuration and the way user profiles are set, it would make
+ * more sense to use user's first or first + last names, or even full name saved
+ * in commerce customer profile. This way even themes can override the output.
+ */
+function theme_commerce_wishlist_user_wishlist_page_title(&$variables) {
+  global $user;
+  if ($user->uid == $variables['account']->uid) {
+    return t('My wishlist');
+  }
+  return t("@name's wishlist", array('@name' => $variables['account']->name));
 }
 
 /**
