@@ -88,3 +88,32 @@ function commerce_wishlist_rules_event_info() {
     ),
   );
 }
+
+/**
+ * Implements hook_rules_action_info().
+ */
+function commerce_wishlist_rules_action_info() {
+  return array(
+    'commerce_wishlist_action_remove_product_for_user' => array(
+      'label' => t('Remove product from wishlist'),
+      'group' => t('Commerce Wishlist'),
+      'parameter' => array(
+        'product' => array(
+          'type'  => 'commerce_product',
+          'label' => t('Product'),
+        ),
+        'account' => array(
+          'type'  => 'user',
+          'label' => t('User'),
+        ),
+      ),
+    ),
+  );
+}
+
+/**
+ * Rules action callback to remove a specific product from user's wishlist.
+ */
+function commerce_wishlist_action_remove_product_for_user($product, $account) {
+  _commerce_wishlist_remove_product_for_user($product->product_id, $account->uid);
+}
