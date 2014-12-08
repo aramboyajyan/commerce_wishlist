@@ -143,6 +143,29 @@ function commerce_wishlist_form_alter(&$form, &$form_state, $form_id) {
     }
     if (isset($form_state['build_info']['args'][0]->data['context']['view'])) {
       if ($form_state['build_info']['args'][0]->data['context']['view']['view_name'] == 'wishlist') {
+        // Get user ID from the URL. The reason we cannot use menu_get_object()
+        // here is that the argument is not defined using hook_menu() and the
+        // user ID is not recognized as %user in menu router.
+        if (arg(1) && is_numeric(arg(1)) && $account = user_load(arg(1))) {
+          // Get node ID from the database.
+          $nid = db_select('commerce_wishlist', 'cw')
+            ->addTag('commerce_wishlist')
+            ->fields('cw', array('nid'))
+            ->condition('uid', $account->uid)
+            ->condition('product_id', $form_state['default_product']->product_id)
+            ->execute()
+            ->fetchField();
+          // Attach user information to "Add to cart" buttons.
+          $form['wishlist_uid'] = array(
+            '#type'  => 'hidden',
+            '#value' => $account->uid,
+          );
+          $form['wishlist_nid'] = array(
+            '#type'  => 'hidden',
+            '#value' => $nid,
+          );
+          $form['#submit'][] = 'commerce_wishlist_product_added_to_cart';
+        }
         return;
       }
     }
@@ -257,6 +280,35 @@ function theme_commerce_wishlist_already_in_wishlist_link(&$variables) {
   return t('Already in <a class="in-wishlist" href="@url">your wishlist</a>.', array(
     '@url' => url('user/' . $variables['user_id'] . '/wishlist'))
   );
+}
+
+/**
+ * Form submit handler called after a wishlist product has been added to the
+ * cart.
+ */
+function commerce_wishlist_product_added_to_cart($form, &$form_state) {
+  global $user;
+  // Load the line item, add wishlist user ID in additional data, and then save
+  // back the changes.
+  $line_item = commerce_line_item_load($form_state['line_item']->line_item_id);
+  $line_item->data['wishlist_products'][] = array(
+    'node_id'    => $form_state['values']['wishlist_nid'],
+    'user_id'    => $form_state['values']['wishlist_uid'],
+    'product_id' => $form_state['values']['product_id'],
+  );
+  commerce_line_item_save($line_item);
+  // Get the target node ID and other information necessary for Rules event.
+  $nid = db_select('commerce_wishlist', 'cw')
+    ->addTag('commerce_wishlist')
+    ->fields('cw', array('nid'))
+    ->condition('product_id', $form_state['values']['product_id'])
+    ->condition('uid', $form_state['values']['wishlist_uid'])
+    ->execute()
+    ->fetchField();
+  $account = user_load($form_state['values']['wishlist_uid']);
+  $product = commerce_product_load($form_state['values']['product_id']);
+  $node    = node_load($nid);
+  rules_invoke_event('commerce_wishlist_event_product_added_to_cart', $account, $product, $node);
 }
 
 /**
