@@ -130,7 +130,7 @@ function commerce_wishlist_form_alter(&$form, &$form_state, $form_id) {
     $product_id = $form_state['default_product']->product_id;
     $nid = _commerce_wishlist_get_context_entity_id($form_state['context']);
     $element = variable_get('commerce_wishlist_element', 'button');
-    $in_wishlist = commerce_wishlist_in_wishlist($user->uid, $product_id);
+    $in_wishlist = _commerce_wishlist_in_wishlist($user->uid, $product_id);
     $link_exists = _commerce_wishlist_link($user->uid);
 
     switch ($element) {
@@ -178,14 +178,14 @@ function commerce_wishlist_form_alter(&$form, &$form_state, $form_id) {
   }
 
   if ($form_id == 'user_login' && !empty($_GET['product_id'])) {
-    $form['#submit'][] = '_commerce_wishlist_user_login';
+    $form['#submit'][] = 'commerce_wishlist_user_login';
   }
 }
 
 /**
  *
  */
-function _commerce_wishlist_user_login($form, &$form_state) {
+function commerce_wishlist_user_login($form, &$form_state) {
   if (!empty($form_state['uid'])) {
     $url = 'wishlist-actions/nojs/add/' . $form_state['uid'] . '/' . $_GET['product_id'] . '/' . $_GET['nid'];
     $form_state['redirect'] = array(
@@ -236,7 +236,7 @@ function commerce_wishlist_add_form_validate($form, &$form_state) {
     $nid = _commerce_wishlist_get_context_entity_id($form_state['build_info']['args'][2]);
 
     // Verify if this prodcut has been added to wishlist
-    $in_wishlist = commerce_wishlist_in_wishlist($user->uid, $form_state['values']['product_id'], $nid);
+    $in_wishlist = _commerce_wishlist_in_wishlist($user->uid, $form_state['values']['product_id'], $nid);
 
     if ($in_wishlist) {
       form_set_error('add_to_wishlist', t('This product is already in your wishlist.'));
@@ -256,7 +256,7 @@ function commerce_wishlist_add_form_submit($form, &$form_state) {
     $fields = array('uid' => $user->uid, 'product_id' => $form_state['values']['product_id'], 'quantity' => $form_state['values']['quantity']);
     $fields['nid'] = _commerce_wishlist_get_context_entity_id($form_state['build_info']['args'][2]);
 
-    commerce_wishlist_add_product($fields);
+    _commerce_wishlist_add_product($fields);
 
     $title = (isset($form_state['build_info']['args'][2]['entity']->title)) ? $form_state['build_info']['args'][2]['entity']->title : $form_state['build_info']['args'][0]->line_item_label;
 
@@ -281,7 +281,7 @@ function commerce_wishlist_delete($user, $wishlist_id) {
 /**
  * Verify if this prodcut has been added to wishlist
  */
-function commerce_wishlist_in_wishlist($uid, $product_id, $nid = NULL) {
+function _commerce_wishlist_in_wishlist($uid, $product_id, $nid = NULL) {
 
   $conditions = db_and();
   $conditions->condition('uid', $uid);
@@ -312,11 +312,11 @@ function commerce_wishlist_operations() {
       isset($args[2]) && isset($args[3])) && (isset($_GET['token']) && drupal_valid_token($_GET['token']))) {
     switch ($args[1]) {
       case 'add' :
-        if (commerce_wishlist_in_wishlist($args[2], $args[3], $args[4])) {
+        if (_commerce_wishlist_in_wishlist($args[2], $args[3], $args[4])) {
           return;
         }
         $fields = array('uid' => $args[2], 'product_id' => $args[3], 'nid' => $args[4], 'quantity' => 1);
-        commerce_wishlist_add_product($fields);
+        _commerce_wishlist_add_product($fields);
         break;
     }
 
@@ -340,7 +340,7 @@ function commerce_wishlist_operations() {
 /**
  * Adds product to wishlist
  */
-function commerce_wishlist_add_product($fields) {
+function _commerce_wishlist_add_product($fields) {
   return db_insert('commerce_wishlist')
     ->fields($fields)
     ->execute();
