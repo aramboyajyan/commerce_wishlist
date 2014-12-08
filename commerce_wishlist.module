@@ -349,7 +349,7 @@ function commerce_wishlist_add_product($fields) {
  * Returns html of "Already in wishlist" link. TODO: themeable?
  */
 function _commerce_wishlist_link($uid) {
-  return t('Already in <a class="in-wishlist" target="_blank" href="@url">wishlist</a>', array(
+  return t('Already in your <a class="in-wishlist" target="_blank" href="@url">wishlist</a>', array(
     '@url' => url('user/' . $uid . '/wishlist')));
 }
 
